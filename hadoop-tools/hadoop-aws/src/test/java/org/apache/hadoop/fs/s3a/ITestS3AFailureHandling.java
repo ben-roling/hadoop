@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,51 +56,49 @@ public class ITestS3AFailureHandling extends AbstractS3ATestBase {
   @Test
   public void testReadFileChanged() throws Throwable {
     describe("overwrite a file with a shorter one during a read, seek");
-    final int fullLength = 8192;
-    final byte[] fullDataset = dataset(fullLength, 'a', 32);
-    final int shortLen = 4096;
-    final byte[] shortDataset = dataset(shortLen, 'A', 32);
+    final int originalLength = 8192;
+    final byte[] originalDataset = dataset(originalLength, 'a', 32);
+    final int newLength = originalLength + 1;
+    final byte[] newDataset = dataset(newLength, 'A', 32);
     final FileSystem fs = getFileSystem();
     final Path testpath = path("readFileToChange.txt");
     // initial write
-    writeDataset(fs, testpath, fullDataset, fullDataset.length, 1024, false);
+    writeDataset(fs, testpath, originalDataset, originalDataset.length, 1024, false);
     try(FSDataInputStream instream = fs.open(testpath)) {
-      instream.seek(fullLength - 16);
+      // seek forward and read successfully
+      instream.seek(1024);
       assertTrue("no data to read", instream.read() >= 0);
+
       // overwrite
-      writeDataset(fs, testpath, shortDataset, shortDataset.length, 1024, true);
-      // here the file length is less. Probe the file to see if this is true,
+      writeDataset(fs, testpath, newDataset, newDataset.length, 1024, true);
+      // here the new file length is larger. Probe the file to see if this is true,
       // with a spin and wait
       eventually(30 * 1000, 1000,
           () -> {
-            assertEquals(shortLen, fs.getFileStatus(testpath).getLen());
+            assertEquals(newLength, fs.getFileStatus(testpath).getLen());
           });
 
-      // here length is shorter. Assuming it has propagated to all replicas,
-      // the position of the input stream is now beyond the EOF.
-      // An attempt to seek backwards to a position greater than the
-      // short length will raise an exception from AWS S3, which must be
-      // translated into an EOF
+      // With the new file version in place, any subsequent S3 read by eTag will fail.
+      // A new read by eTag will occur in reopen() on read after a seek() backwards.  We verify
+      // seek backwards results in the expected IOException and seek() forward works without issue.
 
-      instream.seek(shortLen + 1024);
-      int c = instream.read();
-      assertIsEOF("read()", c);
+      // first check seek forward
+      instream.seek(2048);
+      assertTrue("no data to read", instream.read() >= 0);
+
+      // now check seek backward
+      instream.seek(instream.getPos() - 100);
+      intercept(IOException.class, "", "read",
+          () -> instream.read());
 
       byte[] buf = new byte[256];
 
-      assertIsEOF("read(buffer)", instream.read(buf));
-      assertIsEOF("read(offset)",
-          instream.read(instream.getPos(), buf, 0, buf.length));
-
-      // now do a block read fully, again, backwards from the current pos
-      intercept(EOFException.class, "", "readfully",
-          () -> instream.readFully(shortLen + 512, buf));
-
-      assertIsEOF("read(offset)",
-          instream.read(shortLen + 510, buf, 0, buf.length));
-
-      // seek somewhere useful
-      instream.seek(shortLen - 256);
+      intercept(IOException.class, "eTag constraint not met", "read",
+          () -> instream.read(buf));
+      intercept(IOException.class, "eTag constraint not met", "read",
+          () -> instream.read(instream.getPos(), buf, 0, buf.length));
+      intercept(IOException.class, "eTag constraint not met", "readfully",
+          () -> instream.readFully(instream.getPos() - 512, buf));
 
       // delete the file. Reads must fail
       fs.delete(testpath, false);

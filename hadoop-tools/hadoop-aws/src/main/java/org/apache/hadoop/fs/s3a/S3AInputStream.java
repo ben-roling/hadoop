@@ -92,6 +92,7 @@ public class S3AInputStream extends FSInputStream implements CanSetReadahead {
   private String serverSideEncryptionKey;
   private S3AInputPolicy inputPolicy;
   private long readahead = Constants.DEFAULT_READAHEAD_RANGE;
+  private String eTag;
 
   /**
    * This is the actual position within the object, used by
@@ -178,14 +179,30 @@ public class S3AInputStream extends FSInputStream implements CanSetReadahead {
     long opencount = streamStatistics.streamOpened();
     GetObjectRequest request = new GetObjectRequest(bucket, key)
         .withRange(targetPos, contentRangeFinish - 1);
+    if (eTag != null) {
+      request.withMatchingETagConstraint(eTag);
+    }
     if (S3AEncryptionMethods.SSE_C.equals(serverSideEncryptionAlgorithm) &&
         StringUtils.isNotBlank(serverSideEncryptionKey)){
       request.setSSECustomerKey(new SSECustomerKey(serverSideEncryptionKey));
     }
-    String text = String.format("Failed to %s %s at %d",
-        (opencount == 0 ? "open" : "re-open"), uri, targetPos);
+    String text = String.format("Failed to %s %s at %d with eTag %s",
+        (opencount == 0 ? "open" : "re-open"), uri, targetPos, eTag);
     S3Object object = Invoker.once(text, uri,
         () -> client.getObject(request));
+    // Object may be null due to concurrent write. New write has new eTag so read with
+    // old eTag fails to find anything
+    if (object == null) {
+      throw new IOException(
+          String.format("eTag constraint not met on %s %s at %d with eTag %s",
+          (opencount == 0 ? "open" : "re-open"), uri, targetPos, eTag));
+    }
+
+    // eTag is null on first (re)open. Pin it so subsequent re-open fails if
+    // object has been updated
+    if (eTag == null) {
+      eTag = object.getObjectMetadata().getETag();
+    }
     wrappedStream = object.getObjectContent();
     contentRangeStart = targetPos;
     if (wrappedStream == null) {
