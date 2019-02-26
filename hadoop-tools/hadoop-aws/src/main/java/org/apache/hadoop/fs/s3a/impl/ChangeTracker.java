@@ -149,6 +149,10 @@ public class ChangeTracker {
 
     final ObjectMetadata metadata = object.getObjectMetadata();
     final String newRevisionId = policy.getRevisionId(metadata, uri);
+    if (newRevisionId == null && policy.isRequireVersion()) {
+      throw new PathIOException(uri, String.format("No %s and %s is required",
+          policy.getSource(), policy.getSource()));
+    }
     if (revisionId == null) {
       // revisionId is null on first (re)open. Pin it so change can be detected if
       // object has been updated
@@ -163,14 +167,12 @@ public class ChangeTracker {
               revisionId, newRevisionId,
               uri,
               pos, operation);
-      // update the revision.
-      revisionId = newRevisionId;
       if (pair.left) {
         // an mismatch has occurred: note it.
         versionMismatches.incrementAndGet();
       }
       if (pair.right != null) {
-        // there's an exception to raise: to it
+        // there's an exception to raise: do it
         throw pair.right;
       }
     }

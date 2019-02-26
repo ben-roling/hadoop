@@ -50,6 +50,7 @@ public abstract class ChangeDetectionPolicy {
   public static final String CHANGE_DETECTED = "change detected";
 
   private final Mode mode;
+  private final boolean requireVersion;
 
   /**
    * Version support is only warned about once per S3A instance.
@@ -132,8 +133,10 @@ public abstract class ChangeDetectionPolicy {
     }
   }
 
-  protected ChangeDetectionPolicy(Mode mode) {
+  protected ChangeDetectionPolicy(Mode mode, boolean requireVersion)
+  {
     this.mode = mode;
+    this.requireVersion = requireVersion;
   }
 
   public Mode getMode() {
@@ -141,6 +144,10 @@ public abstract class ChangeDetectionPolicy {
   }
 
   public abstract Source getSource();
+
+  public boolean isRequireVersion() {
+    return requireVersion;
+  }
 
   public LogExactlyOnce getLogNoVersionSupport() {
     return logNoVersionSupport;
@@ -155,23 +162,26 @@ public abstract class ChangeDetectionPolicy {
   public static ChangeDetectionPolicy getPolicy(Configuration configuration) {
     Mode mode = Mode.fromConfiguration(configuration);
     Source source = Source.fromConfiguration(configuration);
-    return createPolicy(mode, source);
+    boolean requireVersion = configuration.getBoolean(
+        CHANGE_DETECT_REQUIRE_VERSION, CHANGE_DETECT_REQUIRE_VERSION_DEFAULT);
+    return createPolicy(mode, source, requireVersion);
   }
 
   /**
    * Create a policy
    * @param mode mode pf checks
    * @param source source of change
+   * @param requireVersion throw exception when no version available?
    * @return the policy
    */
   @VisibleForTesting
   public static ChangeDetectionPolicy createPolicy(final Mode mode,
-      final Source source) {
+      final Source source, final boolean requireVersion) {
     switch (source) {
     case ETag:
-      return new ETagChangeDetectionPolicy(mode);
+      return new ETagChangeDetectionPolicy(mode, requireVersion);
     case VersionId:
-      return new VersionIdChangeDetectionPolicy(mode);
+      return new VersionIdChangeDetectionPolicy(mode, requireVersion);
     default:
       return new NoChangeDetection();
     }
@@ -249,8 +259,8 @@ public abstract class ChangeDetectionPolicy {
    */
   static class ETagChangeDetectionPolicy extends ChangeDetectionPolicy {
 
-    ETagChangeDetectionPolicy(Mode mode) {
-      super(mode);
+    ETagChangeDetectionPolicy(Mode mode, boolean requireVersion) {
+      super(mode, requireVersion);
     }
 
     @Override
@@ -284,8 +294,8 @@ public abstract class ChangeDetectionPolicy {
   static class VersionIdChangeDetectionPolicy extends
       ChangeDetectionPolicy {
 
-    VersionIdChangeDetectionPolicy(Mode mode) {
-      super(mode);
+    VersionIdChangeDetectionPolicy(Mode mode, boolean requireVersion) {
+      super(mode, requireVersion);
     }
 
     @Override
@@ -326,7 +336,7 @@ public abstract class ChangeDetectionPolicy {
   static class NoChangeDetection extends ChangeDetectionPolicy {
 
     NoChangeDetection() {
-      super(Mode.None);
+      super(Mode.None, false);
     }
 
     @Override

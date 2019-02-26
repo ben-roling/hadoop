@@ -983,6 +983,44 @@ options are covered in [Testing](./testing.md).
   <description>Select which version of the S3 SDK's List Objects API to use.
   Currently support 2 (default) and 1 (older API).</description>
 </property>
+
+<property>
+  <name>fs.s3.change.detection.source</name>
+  <value>etag</value>
+  <description>Select which S3 object attribute to use for change detection.
+  Currently support 'etag' for S3 object eTags and 'versionid' for
+  S3 object version IDs.  Use of version IDs requires object versioning to be
+  enabled for each S3 bucket utilized.  Object versioning is disabled on
+  buckets by default. When version ID is used, the buckets utilized should
+  have versioning enabled before any data is written.</description>
+</property>
+
+<property>
+  <name>fs.s3.change.detection.mode</name>
+  <value>server</value>
+  <description>Determines how change detection is applied to alert to S3 objects
+  rewritten while being read. Value 'server' indicates to apply the attribute
+  constraint directly on GetObject requests to S3. Value 'client' means to do a
+  client-side comparison of the attribute value returned in the response.  Value
+  'server' would not work with third-party S3 implementations that do not
+  support these constraints on GetObject. Values 'server' and 'client' generate
+  RemoteObjectChangedException when a mismatch is detected.  Value 'warn' works
+  like 'client' but generates only a warning.  Value 'none' will ignore change
+  detection completely.
+  </description>
+</property>
+
+<property>
+  <name>fs.s3.change.detection.versionrequired</name>
+  <value>true</value>
+  <description>Determines if S3 object version attribute defined by
+  fs.s3.change.detection.source should be treated as required.  If true and the
+  referred attribute is unavailable in an S3 GetObject response, PathIOException
+  is thrown.  Setting to 'true' is encouraged to avoid potential for
+  inconsistent reads with third-party S3 implementations or against S3 buckets
+  that have object versioning disabled.
+  </description>
+</property>
 ```
 
 ## <a name="retry_and_recovery"></a>Retry and Recovery

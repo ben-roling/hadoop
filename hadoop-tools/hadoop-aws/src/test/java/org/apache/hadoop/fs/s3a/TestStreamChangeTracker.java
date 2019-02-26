@@ -24,6 +24,7 @@ import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import org.apache.hadoop.fs.PathIOException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,8 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     LOG.info("If an endpoint doesn't return versions, that's OK");
     ChangeTracker tracker = newTracker(
         ChangeDetectionPolicy.Mode.Client,
-        ChangeDetectionPolicy.Source.VersionId);
+        ChangeDetectionPolicy.Source.VersionId,
+        false);
     assertFalse("Tracker should not have applied contraints " + tracker,
         tracker.maybeApplyConstraint(newGetObjectRequest()));
     tracker.processResponse(
@@ -66,11 +68,25 @@ public class TestStreamChangeTracker extends HadoopTestBase {
   }
 
   @Test
+  public void testVersionCheckingHandlingNoVersionsVersionRequired()
+      throws Throwable {
+    LOG.info("If an endpoint doesn't return versions but we are configured to"
+        + "require them");
+    ChangeTracker tracker = newTracker(
+        ChangeDetectionPolicy.Mode.Client,
+        ChangeDetectionPolicy.Source.VersionId,
+        true);
+    expectPathIOException(tracker, newResponse(null, null),
+        "VersionId is required");
+  }
+
+  @Test
   public void testEtagCheckingWarn() throws Throwable {
     LOG.info("If an endpoint doesn't return errors, that's OK");
     ChangeTracker tracker = newTracker(
         ChangeDetectionPolicy.Mode.Warn,
-        ChangeDetectionPolicy.Source.ETag);
+        ChangeDetectionPolicy.Source.ETag,
+        false);
     assertFalse("Tracker should not have applied contraints " + tracker,
         tracker.maybeApplyConstraint(newGetObjectRequest()));
     tracker.processResponse(
@@ -83,11 +99,11 @@ public class TestStreamChangeTracker extends HadoopTestBase {
         newResponse("e2", null),
         "", 0);
     assertTrackerMismatchCount(tracker, 1);
-    // subsequent error does not trigger a second warning
+    // subsequent error triggers a second warning
     tracker.processResponse(
         newResponse("e2", null),
         "", 0);
-    assertTrackerMismatchCount(tracker, 1);
+    assertTrackerMismatchCount(tracker, 2);
   }
 
   @Test
@@ -95,7 +111,8 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     LOG.info("Verify the client-side version checker raises exceptions");
     ChangeTracker tracker = newTracker(
         ChangeDetectionPolicy.Mode.Client,
-        ChangeDetectionPolicy.Source.VersionId);
+        ChangeDetectionPolicy.Source.VersionId,
+        false);
     assertFalse("Tracker should not have applied contraints " + tracker,
         tracker.maybeApplyConstraint(newGetObjectRequest()));
     tracker.processResponse(
@@ -104,12 +121,11 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     assertTrackerMismatchCount(tracker, 0);
     assertRevisionId(tracker, "rev1");
     GetObjectRequest request = newGetObjectRequest();
-    assertEquals("Request version ID", "rev1", request.getVersionId());
     expectChangeException(tracker, newResponse(null, "rev2"), "change detected");
     // mismatch was noted (so gets to FS stats)
     assertTrackerMismatchCount(tracker, 1);
-    // new revision was picked up (in case someone tries again)
-    assertRevisionId(tracker, "rev2");
+    // new revision was not picked up (in case someone tries again)
+    assertRevisionId(tracker, "rev1");
   }
 
   @Test
@@ -117,7 +133,8 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     LOG.info("Verify the client-side version checker handles null-ness");
     ChangeTracker tracker = newTracker(
         ChangeDetectionPolicy.Mode.Server,
-        ChangeDetectionPolicy.Source.VersionId);
+        ChangeDetectionPolicy.Source.VersionId,
+        false);
     assertFalse("Tracker should not have applied contraints " + tracker,
         tracker.maybeApplyConstraint(newGetObjectRequest()));
     tracker.processResponse(
@@ -149,8 +166,24 @@ public class TestStreamChangeTracker extends HadoopTestBase {
       final ChangeTracker tracker,
       final S3Object response, 
       final String message) throws Exception {
+    return expectException(tracker, response, message,
+        RemoteFileChangedException.class);
+  }
+
+  protected PathIOException expectPathIOException(
+      final ChangeTracker tracker,
+      final S3Object response,
+      final String message) throws Exception {
+    return expectException(tracker, response, message, PathIOException.class);
+  }
+
+  protected <T extends Exception> T expectException(
+      final ChangeTracker tracker,
+      final S3Object response,
+      final String message,
+      final Class<T> clazz) throws Exception {
     return intercept(
-        RemoteFileChangedException.class,
+        clazz,
         message,
         () -> {
           tracker.processResponse(response, "", 0);
@@ -178,10 +211,11 @@ public class TestStreamChangeTracker extends HadoopTestBase {
    * @return the tracker.
    */
   protected ChangeTracker newTracker(final ChangeDetectionPolicy.Mode mode,
-      final ChangeDetectionPolicy.Source source) {
+      final ChangeDetectionPolicy.Source source, boolean requireVersion) {
     ChangeDetectionPolicy policy = createPolicy(
         mode,
-        source);
+        source,
+        requireVersion);
     ChangeTracker tracker = new ChangeTracker(URI, policy,
         new AtomicLong(0));
     assertFalse("Tracker should not have applied contraints " + tracker,
@@ -193,13 +227,13 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     return new GetObjectRequest(BUCKET, OBJECT);
   }
   
-  private S3Object newResponse(String etag, String revision) {
+  private S3Object newResponse(String etag, String versionId) {
     ObjectMetadata md = new ObjectMetadata();
     if (etag != null) {
       md.setHeader(Headers.ETAG, etag);
     }
-    if (revision != null) {
-      md.setHeader(Headers.S3_VERSION_ID, revision);
+    if (versionId != null) {
+      md.setHeader(Headers.S3_VERSION_ID, versionId);
     }
     S3Object response = emptyResponse();
     response.setObjectMetadata(md);
