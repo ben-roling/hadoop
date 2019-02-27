@@ -166,10 +166,10 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     assertTrue("Tracker should have applied contraints " + tracker,
         tracker.maybeApplyConstraint(request));
   }
-  
+
   protected RemoteFileChangedException expectChangeException(
       final ChangeTracker tracker,
-      final S3Object response, 
+      final S3Object response,
       final String message) throws Exception {
     return expectException(tracker, response, message,
         RemoteFileChangedException.class);
@@ -212,7 +212,7 @@ public class TestStreamChangeTracker extends HadoopTestBase {
   }
 
   /**
-   * Create tracker. 
+   * Create tracker.
    * Contains standard assertions(s).
    * @return the tracker.
    */
@@ -232,7 +232,7 @@ public class TestStreamChangeTracker extends HadoopTestBase {
   private GetObjectRequest newGetObjectRequest() {
     return new GetObjectRequest(BUCKET, OBJECT);
   }
-  
+
   private S3Object newResponse(String etag, String versionId) {
     ObjectMetadata md = new ObjectMetadata();
     if (etag != null) {
@@ -243,7 +243,7 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     }
     S3Object response = emptyResponse();
     response.setObjectMetadata(md);
-    return response;    
+    return response;
   }
 
   private S3Object emptyResponse() {

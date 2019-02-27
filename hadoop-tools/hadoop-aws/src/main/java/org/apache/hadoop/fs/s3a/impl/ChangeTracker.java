@@ -117,7 +117,7 @@ public class ChangeTracker {
 
 
   /**
-   * Process the response from the server for validation against the 
+   * Process the response from the server for validation against the
    * change policy.
    * @param object object returned; may be null.
    * @param operation operation in progress.
@@ -135,8 +135,8 @@ public class ChangeTracker {
         // object was not returned.
         versionMismatches.incrementAndGet();
         throw new RemoteFileChangedException(uri, operation,
-            String.format("%s change " 
-                    + CHANGE_REPORTED_BY_S3 
+            String.format("%s change "
+                    + CHANGE_REPORTED_BY_S3
                     + " while reading"
                     + " at position %s."
                     + " Version %s was unavailable",

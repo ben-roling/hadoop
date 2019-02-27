@@ -255,9 +255,9 @@ public abstract class ChangeDetectionPolicy {
       return new ImmutablePair<>(true,
           new RemoteFileChangedException(uri,
               operation,
-              String.format("%s " 
-                      + CHANGE_DETECTED 
-                      + " while reading at position %s." 
+              String.format("%s "
+                      + CHANGE_DETECTED
+                      + " while reading at position %s."
                     + " Expected %s got %s",
               getSource(), position, revisionId, newRevisionId)));
     }

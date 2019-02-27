@@ -642,7 +642,7 @@ public class S3AInstrumentation implements Closeable, MetricsSource {
     public long bytesDiscardedInAbort;
     public long policySetCount;
     public long inputPolicy;
-    /** This is atomic so that it can be passed as a reference. */ 
+    /** This is atomic so that it can be passed as a reference. */
     public final AtomicLong versionMismatches = new AtomicLong(0);
 
     private InputStreamStatistics() {
