@@ -68,10 +68,13 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
         // test with versionId
         // when using server-side versionId, the exceptions shouldn't happen
         // since the previous version will still be available
-        {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_SERVER, false, false},
+        {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_SERVER, false,
+            false},
 
         // with client-side versionId it will behave similar to client-side eTag
-        {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_CLIENT, true, true},
+        {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_CLIENT, true,
+            true},
+
         {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_WARN, false, true},
         {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_NONE, false, true}
     });
@@ -123,8 +126,8 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
 
       // overwrite
       writeDataset(fs, testpath, newDataset, newDataset.length, 1024, true);
-      // here the new file length is larger. Probe the file to see if this is true,
-      // with a spin and wait
+      // here the new file length is larger. Probe the file to see if this is
+      // true, with a spin and wait
       eventually(30 * 1000, 1000,
           () -> {
             assertEquals(newLength, fs.getFileStatus(testpath).getLen());
@@ -133,7 +136,8 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
       // With the new file version in place, any subsequent S3 read by
       // eTag/versionId will fail.  A new read by eTag/versionId will occur in
       // reopen() on read after a seek() backwards.  We verify seek backwards
-      // results in the expected exception and seek() forward works without issue.
+      // results in the expected exception and seek() forward works without
+      // issue.
 
       // first check seek forward
       instream.seek(2048);
@@ -145,8 +149,7 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
       if (expectChangeException) {
         intercept(RemoteFileChangedException.class, "", "read",
             () -> instream.read());
-      }
-      else {
+      } else {
         instream.read();
       }
 
@@ -162,8 +165,7 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
             () -> instream.read(0, buf, 0, buf.length));
         intercept(RemoteFileChangedException.class,  "", "readfully",
             () -> instream.readFully(0, buf));
-      }
-      else {
+      } else {
         instream.read(buf);
         instream.read(0, buf, 0, buf.length);
         instream.readFully(0, buf);

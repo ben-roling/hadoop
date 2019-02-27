@@ -39,7 +39,7 @@ import static org.apache.hadoop.fs.s3a.impl.ChangeTracker.CHANGE_REPORTED_BY_S3;
 import static org.apache.hadoop.test.LambdaTestUtils.intercept;
 
 /**
- * Test {@link ChangeTracker}
+ * Test {@link ChangeTracker}.
  */
 public class TestStreamChangeTracker extends HadoopTestBase {
 

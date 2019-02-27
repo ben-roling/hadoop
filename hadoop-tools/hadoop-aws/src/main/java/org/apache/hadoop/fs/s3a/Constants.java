@@ -649,7 +649,7 @@ public final class Constants {
       = "fs.s3.change.detection.source";
 
   /**
-   * eTag as the change detection mechanism
+   * eTag as the change detection mechanism.
    */
   public static final String CHANGE_DETECT_SOURCE_ETAG = "etag";
 
@@ -659,7 +659,7 @@ public final class Constants {
   public static final String CHANGE_DETECT_SOURCE_VERSION_ID = "versionid";
 
   /**
-   * Default change detection mechanism: eTag
+   * Default change detection mechanism: eTag.
    */
   public static final String CHANGE_DETECT_SOURCE_DEFAULT =
       CHANGE_DETECT_SOURCE_ETAG;
@@ -699,7 +699,7 @@ public final class Constants {
   public static final String CHANGE_DETECT_MODE_NONE = "none";
 
   /**
-   * Default change detection mode: server
+   * Default change detection mode: server.
    */
   public static final String CHANGE_DETECT_MODE_DEFAULT =
       CHANGE_DETECT_MODE_SERVER;
@@ -710,14 +710,14 @@ public final class Constants {
    * For example, if source is versionId, but object versioning is not enabled
    * on the bucket, or alternatively if source is eTag and a third-party S3
    * implementation that doesn't return eTag is used.
-   * </p>
+   * <p>
    * When false, only a warning message will be logged for this condition.
    */
   public static final String CHANGE_DETECT_REQUIRE_VERSION =
       "fs.s3.change.detection.versionrequired";
 
   /**
-   * Default change detection require version: true
+   * Default change detection require version: true.
    */
   public static final boolean CHANGE_DETECT_REQUIRE_VERSION_DEFAULT = true;
 }

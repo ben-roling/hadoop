@@ -32,7 +32,7 @@ import org.apache.hadoop.fs.PathIOException;
 public class NoVersionAttributeException extends PathIOException {
 
   /**
-   * Constructs a NoVersionAttributeException
+   * Constructs a NoVersionAttributeException.
    *
    * @param path the path accessed when the condition was detected
    * @param message a message providing more details about the condition

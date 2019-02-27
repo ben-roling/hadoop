@@ -33,7 +33,7 @@ import org.apache.hadoop.fs.PathIOException;
 public class RemoteFileChangedException extends PathIOException {
 
   /**
-   * Constructs a RemoteFileChangedException
+   * Constructs a RemoteFileChangedException.
    *
    * @param path the path accessed when the change was detected
    * @param operation the operation (e.g. open, re-open) performed when the

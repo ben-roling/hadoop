@@ -45,7 +45,7 @@ public class S3AReadOpContext extends S3AOpContext {
   private final S3AInputPolicy inputPolicy;
 
   /**
-   * How to detect and deal with the object being updated during read
+   * How to detect and deal with the object being updated during read.
    */
   private final ChangeDetectionPolicy changeDetectionPolicy;
 

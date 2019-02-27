@@ -921,7 +921,7 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
   private S3AReadOpContext createReadContext(
       final FileStatus fileStatus,
       final S3AInputPolicy seekPolicy,
-      final ChangeDetectionPolicy changeDetectionPolicy,
+      final ChangeDetectionPolicy changePolicy,
       final long readAheadRange) {
     return new S3AReadOpContext(fileStatus.getPath(),
         hasMetadataStore(),
@@ -931,7 +931,7 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
         instrumentation,
         fileStatus,
         seekPolicy,
-        changeDetectionPolicy,
+        changePolicy,
         readAheadRange);
   }
 

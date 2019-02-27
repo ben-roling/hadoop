@@ -156,8 +156,8 @@ public class ChangeTracker {
           policy.getSource()));
     }
     if (revisionId == null) {
-      // revisionId is null on first (re)open. Pin it so change can be detected if
-      // object has been updated
+      // revisionId is null on first (re)open. Pin it so change can be detected
+      // if object has been updated
       LOG.debug("Setting revision ID for object at {}: {}",
           uri, newRevisionId);
       revisionId = newRevisionId;

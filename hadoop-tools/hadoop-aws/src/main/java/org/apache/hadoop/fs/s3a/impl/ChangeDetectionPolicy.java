@@ -100,7 +100,7 @@ public abstract class ChangeDetectionPolicy {
   public enum Mode {
     /** Client side validation. */
     Client(CHANGE_DETECT_MODE_CLIENT),
-    /** Server side validation/ */
+    /** Server side validation. */
     Server(CHANGE_DETECT_MODE_SERVER),
     /** Warn but continue. */
     Warn(CHANGE_DETECT_MODE_WARN),
@@ -133,8 +133,7 @@ public abstract class ChangeDetectionPolicy {
     }
   }
 
-  protected ChangeDetectionPolicy(Mode mode, boolean requireVersion)
-  {
+  protected ChangeDetectionPolicy(Mode mode, boolean requireVersion) {
     this.mode = mode;
     this.requireVersion = requireVersion;
   }
@@ -168,7 +167,7 @@ public abstract class ChangeDetectionPolicy {
   }
 
   /**
-   * Create a policy
+   * Create a policy.
    * @param mode mode pf checks
    * @param source source of change
    * @param requireVersion throw exception when no version available?
@@ -189,7 +188,7 @@ public abstract class ChangeDetectionPolicy {
 
   /**
    * Pulls the attribute this policy uses to detect change out of the S3 object
-   * metadata.  The policy calls generically refers to this attribute as
+   * metadata.  The policy generically refers to this attribute as
    * {@code revisionId}.
    *
    * @param objectMetadata the s3 object metadata
@@ -202,7 +201,7 @@ public abstract class ChangeDetectionPolicy {
       String uri);
 
   /**
-   * Applies the given {@link #getRevisionId(ObjectMetadata, String) revisionId} 
+   * Applies the given {@link #getRevisionId(ObjectMetadata, String) revisionId}
    * as a server-side qualification on the {@code GetObjectRequest}.
    *
    * @param request the request
@@ -222,8 +221,9 @@ public abstract class ChangeDetectionPolicy {
    * @param operation the operation being performed on the object (e.g. open or
    * re-open) that triggered the change detection
    * @return a pair of: was a change detected, and any exception to throw.
-   * If the change was detected, this updates a counter in the stream statistics;
-   * If an exception was returned it is thrown after the counter update.
+   * If the change was detected, this updates a counter in the stream
+   * statistics; If an exception was returned it is thrown after the counter
+   * update.
    */
   public ImmutablePair<Boolean, RemoteFileChangedException> onChangeDetected(
       String revisionId,
