@@ -24,6 +24,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.fs.s3a.NoVersionAttributeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,8 +151,9 @@ public class ChangeTracker {
     final ObjectMetadata metadata = object.getObjectMetadata();
     final String newRevisionId = policy.getRevisionId(metadata, uri);
     if (newRevisionId == null && policy.isRequireVersion()) {
-      throw new PathIOException(uri, String.format("No %s and %s is required",
-          policy.getSource(), policy.getSource()));
+      throw new NoVersionAttributeException(uri, String.format(
+          "Change detection policy requires %s",
+          policy.getSource()));
     }
     if (revisionId == null) {
       // revisionId is null on first (re)open. Pin it so change can be detected if

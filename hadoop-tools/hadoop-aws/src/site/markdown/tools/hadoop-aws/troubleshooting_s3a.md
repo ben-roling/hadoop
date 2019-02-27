@@ -966,27 +966,57 @@ if it is required that the data is persisted durably after every
 This includes resilient logging, HBase-style journaling
 and the like. The standard strategy here is to save to HDFS and then copy to S3.
 
-### `RemoteFileChangedException`
+### `RemoteFileChangedException` and read-during-overwrite
 
-If an S3 object is updated while an S3A filesystem reader has an open InputStream on it,
-the reader may encounter `RemoteFileChangedException`.  This occurs if the S3A InputStream
-needs to re-open the object (e.g. during a seek()) and detects the change.  By default,
-change detection works by tracking the S3 object's eTag attribute.  If the object is updated,
-it gets a new eTag, which is detected during the re-open.
+```
+org.apache.hadoop.fs.s3a.RemoteFileChangedException: re-open `s3a://my-bucket/test/file.txt': ETag change reported by S3 while reading at position 1949. Version f9c186d787d4de9657e99f280ba26555 was unavailable
+  at org.apache.hadoop.fs.s3a.impl.ChangeTracker.processResponse(ChangeTracker.java:137)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.reopen(S3AInputStream.java:200)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.lambda$lazySeek$1(S3AInputStream.java:346)
+  at org.apache.hadoop.fs.s3a.Invoker.lambda$retry$2(Invoker.java:195)
+  at org.apache.hadoop.fs.s3a.Invoker.once(Invoker.java:109)
+  at org.apache.hadoop.fs.s3a.Invoker.lambda$retry$3(Invoker.java:265)
+  at org.apache.hadoop.fs.s3a.Invoker.retryUntranslated(Invoker.java:322)
+  at org.apache.hadoop.fs.s3a.Invoker.retry(Invoker.java:261)
+  at org.apache.hadoop.fs.s3a.Invoker.retry(Invoker.java:193)
+  at org.apache.hadoop.fs.s3a.Invoker.retry(Invoker.java:215)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.lazySeek(S3AInputStream.java:339)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.read(S3AInputStream.java:372)
+```
 
-Change detection is configured via `fs.s3.change.detection.source` and
-`fs.s3.change.detection.mode`, with defaults of `etag` and `server`.  `mode` may be
-changed to `warn` to log a warning message instead of throwing the `RemoteFileChangedException`.
-It may also be changed to `none` to disable change detection entirely.  `client` is another
-possible option that behaves similarly to the default but may be more compatible with
-third-party S3 API implementations.
+If an S3 object is updated while an S3A filesystem reader has an open
+InputStream on it, the reader may encounter `RemoteFileChangedException`.  This
+occurs if the S3A InputStream needs to re-open the object (e.g. during a seek())
+and detects the change.
 
-`versionId` is another option for `fs.s3.change.detection.source` that uses the versionId
-attribute on the S3 object instead of eTag to detect changes.  It will only work if the
-S3 bucket has object versioning enabled.  Setting `source` to `versionId` and `mode` to
-`server` may be more robust as the InputStream can re-open an old version after a newer
-version is written so long as the old version is still retained in the S3 object version
-history.
+If the change detection mode is configured to 'warn', a warning like the
+folllowing will be seen instead of RemoteFileChangedException:
+
+```
+WARN  impl.ChangeDetectionPolicy (ChangeDetectionPolicy.java:onChangeDetected(237)) - ETag change detected on re-open s3a://my-bucket/test/readFileToChange.txt at 1949. Expected f9c186d787d4de9657e99f280ba26555 got 043abff21b7bd068d2d2f27ccca70309
+```
+
+Using a third-party S3 implementation that doesn't support eTags might result in
+the following.  Similar would occur if the change detection mode was set to
+'versionid' and object versioning was disabled or unsupported.
+```
+org.apache.hadoop.fs.NoVersionAttributeException: `s3a://my-bucket/test/file.txt': Change detection policy requires ETag
+  at org.apache.hadoop.fs.s3a.impl.ChangeTracker.processResponse(ChangeTracker.java:153)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.reopen(S3AInputStream.java:200)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.lambda$lazySeek$1(S3AInputStream.java:346)
+  at org.apache.hadoop.fs.s3a.Invoker.lambda$retry$2(Invoker.java:195)
+  at org.apache.hadoop.fs.s3a.Invoker.once(Invoker.java:109)
+  at org.apache.hadoop.fs.s3a.Invoker.lambda$retry$3(Invoker.java:265)
+  at org.apache.hadoop.fs.s3a.Invoker.retryUntranslated(Invoker.java:322)
+  at org.apache.hadoop.fs.s3a.Invoker.retry(Invoker.java:261)
+  at org.apache.hadoop.fs.s3a.Invoker.retry(Invoker.java:193)
+  at org.apache.hadoop.fs.s3a.Invoker.retry(Invoker.java:215)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.lazySeek(S3AInputStream.java:339)
+  at org.apache.hadoop.fs.s3a.S3AInputStream.read(S3AInputStream.java:372)
+```
+
+See [Handling Read-During-Overwrite](./index.html#handling_read-during-overwrite)
+for more information.
 
 ## <a name="encryption"></a> S3 Server Side Encryption
 

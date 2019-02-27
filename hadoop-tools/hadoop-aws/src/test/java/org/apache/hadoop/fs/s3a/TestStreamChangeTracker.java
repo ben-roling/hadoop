@@ -76,8 +76,8 @@ public class TestStreamChangeTracker extends HadoopTestBase {
         ChangeDetectionPolicy.Mode.Client,
         ChangeDetectionPolicy.Source.VersionId,
         true);
-    expectPathIOException(tracker, newResponse(null, null),
-        "VersionId is required");
+    expectNoVersionAttributeException(tracker, newResponse(null, null),
+        "policy requires VersionId");
   }
 
   @Test
@@ -170,11 +170,12 @@ public class TestStreamChangeTracker extends HadoopTestBase {
         RemoteFileChangedException.class);
   }
 
-  protected PathIOException expectPathIOException(
+  protected PathIOException expectNoVersionAttributeException(
       final ChangeTracker tracker,
       final S3Object response,
       final String message) throws Exception {
-    return expectException(tracker, response, message, PathIOException.class);
+    return expectException(tracker, response, message,
+        NoVersionAttributeException.class);
   }
 
   protected <T extends Exception> T expectException(
