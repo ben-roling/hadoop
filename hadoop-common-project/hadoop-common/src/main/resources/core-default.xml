@@ -1851,7 +1851,7 @@
 </property>
 
 <property>
-  <name>fs.s3.change.detection.source</name>
+  <name>fs.s3a.change.detection.source</name>
   <value>etag</value>
   <description>
     Select which S3 object attribute to use for change detection.
@@ -1864,7 +1864,7 @@
 </property>
 
 <property>
-  <name>fs.s3.change.detection.mode</name>
+  <name>fs.s3a.change.detection.mode</name>
   <value>server</value>
   <description>
     Determines how change detection is applied to alert to S3 objects
@@ -1880,11 +1880,11 @@
 </property>
 
 <property>
-  <name>fs.s3.change.detection.versionrequired</name>
+  <name>fs.s3a.change.detection.versionrequired</name>
   <value>true</value>
   <description>
     Determines if S3 object version attribute defined by
-    fs.s3.change.detection.source should be treated as required.  If true and the
+    fs.s3a.change.detection.source should be treated as required.  If true and the
     referred attribute is unavailable in an S3 GetObject response,
     NoVersionAttributeException is thrown.  Setting to 'true' is encouraged to
     avoid potential for inconsistent reads with third-party S3 implementations or

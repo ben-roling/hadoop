@@ -646,7 +646,7 @@ public final class Constants {
    * versionId?
    */
   public static final String CHANGE_DETECT_SOURCE
-      = "fs.s3.change.detection.source";
+      = "fs.s3a.change.detection.source";
 
   /**
    * eTag as the change detection mechanism.
@@ -669,7 +669,8 @@ public final class Constants {
    * comparison? Client side compare and warn rather than exception?  Don't
    * bother at all?
    */
-  public static final String CHANGE_DETECT_MODE = "fs.s3.change.detection.mode";
+  public static final String CHANGE_DETECT_MODE =
+      "fs.s3a.change.detection.mode";
 
   /**
    * Change is detected on the client side by comparing the returned id with the
@@ -706,7 +707,7 @@ public final class Constants {
 
   /**
    * If true, raises a {@link RemoteFileChangedException} exception when S3
-   * doesn't provide the attribute defined by fs.s3.change.detection.source.
+   * doesn't provide the attribute defined by fs.s3a.change.detection.source.
    * For example, if source is versionId, but object versioning is not enabled
    * on the bucket, or alternatively if source is eTag and a third-party S3
    * implementation that doesn't return eTag is used.
@@ -714,7 +715,7 @@ public final class Constants {
    * When false, only a warning message will be logged for this condition.
    */
   public static final String CHANGE_DETECT_REQUIRE_VERSION =
-      "fs.s3.change.detection.versionrequired";
+      "fs.s3a.change.detection.versionrequired";
 
   /**
    * Default change detection require version: true.

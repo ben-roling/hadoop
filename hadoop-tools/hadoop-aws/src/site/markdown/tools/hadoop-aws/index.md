@@ -1157,7 +1157,7 @@ The configurations items controlling this behavior are:
 
 ```xml
 <property>
-  <name>fs.s3.change.detection.source</name>
+  <name>fs.s3a.change.detection.source</name>
   <value>etag</value>
   <description>
     Select which S3 object attribute to use for change detection.
@@ -1170,7 +1170,7 @@ The configurations items controlling this behavior are:
 </property>
 
 <property>
-  <name>fs.s3.change.detection.mode</name>
+  <name>fs.s3a.change.detection.mode</name>
   <value>server</value>
   <description>
     Determines how change detection is applied to alert to S3 objects
@@ -1186,7 +1186,7 @@ The configurations items controlling this behavior are:
 </property>
 
 <property>
-  <name>fs.s3.change.detection.versionrequired</name>
+  <name>fs.s3a.change.detection.versionrequired</name>
   <value>true</value>
   <description>
     Determines if S3 object version attribute defined by
