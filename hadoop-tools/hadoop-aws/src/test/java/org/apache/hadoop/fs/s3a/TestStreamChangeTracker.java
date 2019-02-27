@@ -99,11 +99,11 @@ public class TestStreamChangeTracker extends HadoopTestBase {
         newResponse("e2", null),
         "", 0);
     assertTrackerMismatchCount(tracker, 1);
-    // subsequent error triggers a second warning
+    // subsequent error triggers doesn't trigger another warning
     tracker.processResponse(
         newResponse("e2", null),
         "", 0);
-    assertTrackerMismatchCount(tracker, 2);
+    assertTrackerMismatchCount(tracker, 1);
   }
 
   @Test
@@ -125,8 +125,12 @@ public class TestStreamChangeTracker extends HadoopTestBase {
         newResponse(null, "rev2"), "change detected");
     // mismatch was noted (so gets to FS stats)
     assertTrackerMismatchCount(tracker, 1);
-    // new revision was not picked up (in case someone tries again)
-    assertRevisionId(tracker, "rev1");
+
+    // another read causes another exception
+    expectChangeException(tracker,
+        newResponse(null, "rev2"), "change detected");
+    // mismatch was noted again
+    assertTrackerMismatchCount(tracker, 2);
   }
 
   @Test

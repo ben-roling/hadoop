@@ -166,9 +166,12 @@ public class ChangeTracker {
           revisionId, newRevisionId);
       ImmutablePair<Boolean, RemoteFileChangedException> pair =
           policy.onChangeDetected(
-              revisionId, newRevisionId,
+              revisionId,
+              newRevisionId,
               uri,
-              pos, operation);
+              pos,
+              operation,
+              versionMismatches.get());
       if (pair.left) {
         // an mismatch has occurred: note it.
         versionMismatches.incrementAndGet();

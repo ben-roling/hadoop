@@ -220,6 +220,8 @@ public abstract class ChangeDetectionPolicy {
    * @param position the position being read in the object
    * @param operation the operation being performed on the object (e.g. open or
    * re-open) that triggered the change detection
+   * @param timesAlreadyDetected number of times a change has already been
+   * detected on the current stream
    * @return a pair of: was a change detected, and any exception to throw.
    * If the change was detected, this updates a counter in the stream
    * statistics; If an exception was returned it is thrown after the counter
@@ -230,17 +232,22 @@ public abstract class ChangeDetectionPolicy {
       String newRevisionId,
       String uri,
       long position,
-      String operation) {
+      String operation,
+      long timesAlreadyDetected) {
     switch (mode) {
     case None:
       // something changed; we don't care.
       return new ImmutablePair<>(false, null);
     case Warn:
-      LOG.warn(
-          String.format("%s change detected on %s %s at %d. Expected %s got %s",
-              getSource(), operation, uri, position, revisionId,
-              newRevisionId));
-      return new ImmutablePair<>(true, null);
+      if (timesAlreadyDetected == 0) {
+        // only warn on the first detection to avoid a noisy log
+        LOG.warn(
+            String.format("%s change detected on %s %s at %d. Expected %s got %s",
+                getSource(), operation, uri, position, revisionId,
+                newRevisionId));
+        return new ImmutablePair<>(true, null);
+      }
+      return new ImmutablePair<>(false, null);
     case Client:
     case Server:
     default:
