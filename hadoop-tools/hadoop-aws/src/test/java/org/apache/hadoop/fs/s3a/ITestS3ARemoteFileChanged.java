@@ -66,8 +66,8 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
         {CHANGE_DETECT_SOURCE_ETAG, CHANGE_DETECT_MODE_NONE, false, true},
 
         // test with versionId
-        // when using server-side versionId, the exceptions shouldn't happen since the previous
-        // version will still be available
+        // when using server-side versionId, the exceptions shouldn't happen
+        // since the previous version will still be available
         {CHANGE_DETECT_SOURCE_VERSION_ID, CHANGE_DETECT_MODE_SERVER, false, false},
 
         // with client-side versionId it will behave similar to client-side eTag
@@ -105,10 +105,12 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
     final S3AFileSystem fs = getFileSystem();
     final Path testpath = path("readFileToChange.txt");
     // initial write
-    writeDataset(fs, testpath, originalDataset, originalDataset.length, 1024, false);
+    writeDataset(fs, testpath, originalDataset, originalDataset.length,
+        1024, false);
 
     if (fs.getChangeDetectionPolicy().getSource() == Source.VersionId) {
-      // skip versionId tests if the bucket doesn't have object versioning enabled
+      // skip versionId tests if the bucket doesn't have object versioning
+      // enabled
       Assume.assumeTrue(
           "Target filesystem does not support versioning",
           fs.getObjectMetadata(fs.pathToKey(testpath)).getVersionId() != null);
@@ -128,9 +130,10 @@ public class ITestS3ARemoteFileChanged extends AbstractS3ATestBase {
             assertEquals(newLength, fs.getFileStatus(testpath).getLen());
           });
 
-      // With the new file version in place, any subsequent S3 read by eTag/versionId will fail.
-      // A new read by eTag/versionId will occur in reopen() on read after a seek() backwards.  We verify
-      // seek backwards results in the expected exception and seek() forward works without issue.
+      // With the new file version in place, any subsequent S3 read by
+      // eTag/versionId will fail.  A new read by eTag/versionId will occur in
+      // reopen() on read after a seek() backwards.  We verify seek backwards
+      // results in the expected exception and seek() forward works without issue.
 
       // first check seek forward
       instream.seek(2048);

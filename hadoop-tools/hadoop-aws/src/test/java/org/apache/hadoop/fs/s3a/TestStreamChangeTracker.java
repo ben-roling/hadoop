@@ -121,7 +121,8 @@ public class TestStreamChangeTracker extends HadoopTestBase {
     assertTrackerMismatchCount(tracker, 0);
     assertRevisionId(tracker, "rev1");
     GetObjectRequest request = newGetObjectRequest();
-    expectChangeException(tracker, newResponse(null, "rev2"), "change detected");
+    expectChangeException(tracker,
+        newResponse(null, "rev2"), "change detected");
     // mismatch was noted (so gets to FS stats)
     assertTrackerMismatchCount(tracker, 1);
     // new revision was not picked up (in case someone tries again)

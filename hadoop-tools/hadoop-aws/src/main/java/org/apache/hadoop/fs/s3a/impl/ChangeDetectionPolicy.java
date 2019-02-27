@@ -188,21 +188,22 @@ public abstract class ChangeDetectionPolicy {
   }
 
   /**
-   * Pulls the attribute this policy uses to detect change out of the S3 object metadata.  The policy calls generically
-   * refers to this attribute as {@code revisionId}.
+   * Pulls the attribute this policy uses to detect change out of the S3 object
+   * metadata.  The policy calls generically refers to this attribute as
+   * {@code revisionId}.
    *
    * @param objectMetadata the s3 object metadata
    * @param uri the URI of the object
-   * @return the revisionId string as interpreted by this policy, or potentially null if the attribute is unavailable
-   * (such as when the policy says to use versionId but object versioning is not enabled for the bucket).
+   * @return the revisionId string as interpreted by this policy, or potentially
+   * null if the attribute is unavailable (such as when the policy says to use
+   * versionId but object versioning is not enabled for the bucket).
    */
   public abstract String getRevisionId(ObjectMetadata objectMetadata,
       String uri);
 
   /**
    * Applies the given {@link #getRevisionId(ObjectMetadata, String) revisionId} 
-   * as a server-side qualification on the
-   * {@code GetObjectRequest}.
+   * as a server-side qualification on the {@code GetObjectRequest}.
    *
    * @param request the request
    * @param revisionId the revision id
@@ -211,14 +212,15 @@ public abstract class ChangeDetectionPolicy {
       String revisionId);
 
   /**
-   * Takes appropriate action based on {@link #getMode() mode} when a change has been detected.
+   * Takes appropriate action based on {@link #getMode() mode} when a change has
+   * been detected.
    *
    * @param revisionId the expected revision id
    * @param newRevisionId the detected revision id
    * @param uri the URI of the object being accessed
    * @param position the position being read in the object
-   * @param operation the operation being performed on the object (e.g. open or re-open) that triggered the change
-   * detection
+   * @param operation the operation being performed on the object (e.g. open or
+   * re-open) that triggered the change detection
    * @return a pair of: was a change detected, and any exception to throw.
    * If the change was detected, this updates a counter in the stream statistics;
    * If an exception was returned it is thrown after the counter update.
@@ -302,7 +304,8 @@ public abstract class ChangeDetectionPolicy {
     public String getRevisionId(ObjectMetadata objectMetadata, String uri) {
       String versionId = objectMetadata.getVersionId();
       if (versionId == null) {
-        // this policy doesn't work if the bucket doesn't have object versioning enabled (which isn't by default)
+        // this policy doesn't work if the bucket doesn't have object versioning
+        // enabled (which isn't by default)
         getLogNoVersionSupport().warn(
             CHANGE_DETECT_MODE + " set to " + Source.VersionId
                 + " but no versionId available while reading {}. "

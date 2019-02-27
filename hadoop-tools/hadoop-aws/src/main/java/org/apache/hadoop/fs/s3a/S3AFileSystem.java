@@ -888,9 +888,17 @@ public class S3AFileSystem extends FileSystem implements StreamCapabilities,
           o.get(INPUT_FADVISE, inputPolicy.toString()));
       long readAheadRange2 = o.getLong(READAHEAD_RANGE, readAhead);
       // TODO support change detection policy from options?
-      readContext = createReadContext(fileStatus, policy, changeDetectionPolicy, readAheadRange2);
+      readContext = createReadContext(
+          fileStatus,
+          policy,
+          changeDetectionPolicy,
+          readAheadRange2);
     } else {
-      readContext = createReadContext(fileStatus, inputPolicy, changeDetectionPolicy, readAhead);
+      readContext = createReadContext(
+          fileStatus,
+          inputPolicy,
+          changeDetectionPolicy,
+          readAhead);
     }
     LOG.debug("Opening '{}'", readContext);
 
